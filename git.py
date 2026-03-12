@@ -3,6 +3,30 @@ import os
 import json
 import requests
 
+def get_user_code():
+    url = "https://github.com/login/device/code"
+
+    values = {
+        "client_id": "Ov23lizX5wFSpnR89gKJ",
+        "scope": "read:user repo"
+    }
+
+    headers = {
+        "Accept": "application/json"
+    }
+
+    r = requests.post(url, data=values, headers=headers)
+
+    r_json = r.json()
+
+    device_code = r_json["device_code"]
+    verification_uri = r_json['verification_uri']
+    expires_in = r_json['expires_in']
+    user_code = r_json['user_code']
+    interval = r_json['interval']
+
+    return device_code, verification_uri, expires_in, user_code, interval
+
 def get_access_token():
     try:
         config_dir = os.path.expanduser("~/.config/recticode")

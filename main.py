@@ -2,7 +2,7 @@ import typer
 from rich import print
 import requests
 from time import sleep
-from git import clone_repo, save_access_token, get_access_token, get_user_data, remove_access_token
+from git import clone_repo, save_access_token, get_access_token, get_user_data, remove_access_token, get_user_code
 
 app = typer.Typer()
 
@@ -13,26 +13,8 @@ challenge_names = {"example-python": challenges['python']['example-python']}
 def login():
     access_token = get_access_token()
     if not access_token:
-        url = "https://github.com/login/device/code"
 
-        values = {
-            "client_id": "Ov23lizX5wFSpnR89gKJ",
-            "scope": "read:user repo"
-        }
-
-        headers = {
-            "Accept": "application/json"
-        }
-
-        r = requests.post(url, data=values, headers=headers)
-
-        json = r.json()
-
-        device_code = json["device_code"]
-        verification_uri = json['verification_uri']
-        expires_in = json['expires_in']
-        user_code = json['user_code']
-        interval = json['interval']
+        device_code, verification_uri, expires_in, user_code, interval = get_user_code()
 
         print(f"Go to {verification_uri} and enter code [bold]{user_code}[/bold]")
 
