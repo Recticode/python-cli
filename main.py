@@ -13,6 +13,9 @@ challenge_names = {"example-python": challenges['python']['example-python']}
 def login():
     access_token = get_access_token()
     if not access_token:
+        headers = {
+            "Accept": "application/json"
+        }
 
         device_code, verification_uri, expires_in, user_code, interval = get_user_code()
 
@@ -66,11 +69,16 @@ def logout():
 
 @app.command()
 def start(challenge_name):
-    if challenge_name in challenge_names:
-        clone_repo(challenge_names[challenge_name])
-        print("Cloned repo")
+    access_token = get_access_token()
+    if not access_token:
+        print("Login first to start the challenges")
     else:
-        print("Not a challenge name")
+        username, email, name = get_user_data(access_token=access_token)
+        if challenge_name in challenge_names:
+            clone_repo(challenge_names[challenge_name])
+            print(f"Go to /{challenge_name} to start the challenge")
+        else:
+            print("Not a challenge name")
 
 @app.command()
 def list_challenges():
