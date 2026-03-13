@@ -97,9 +97,9 @@ def start(challenge_name):
 def list_challenges():
     print("[bold][yellow]All Challenges[/yellow][/bold]")
     for language in challenges:
-        print(f"[bold][green]{language.title()}[/bold][/green]")
+        print(f"[bold][green]{language.title()}[/green][/bold]")
         for challenge in challenges[language]:
-            print(challenge)
+            print(f"  • {challenge}")
 
 if __name__ == "__main__":
     app()
