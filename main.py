@@ -48,10 +48,19 @@ def login():
                 username, email, name = get_user_data(access_token=access_token)
 
                 save_access_token(access_token=access_token)
-                print(f"Hi {name}. You are logged in")
+                print(f"[green]✓ Logged in as {name}[/green]")
                 break
 
-            sleep(interval)
+            if "error" in poll_json:
+                if poll_json["error"] == "authorization_pending":
+                    sleep(interval)
+                    continue
+                elif poll_json["error"] == "slow_down":
+                    interval += 5
+                    sleep(interval)
+                elif poll_json["error"] == "expired_token":
+                    print("[red]Device code expired, try login again[/red]")
+                    break
     else:
         username, email, name = get_user_data(access_token=access_token)
 
@@ -72,7 +81,7 @@ def logout():
     else:
         remove_access_token()
 
-        print("Logged out")
+        print("[yellow]✓ Logged out[/yellow]")
 
 
 @app.command()
@@ -80,7 +89,7 @@ def logout():
 def start(challenge_name):
     if challenge_name in challenge_names:
         clone_repo(challenge_names[challenge_name])
-        print(f"Go to /{challenge_name} to start the challenge")
+        print(f"[green]Challenge cloned![/green] cd {challenge_name} to start")
     else:
         print("Not a challenge name")
 
