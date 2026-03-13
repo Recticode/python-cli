@@ -1,5 +1,6 @@
 import typer
 from rich import print
+from functools import wraps
 import requests
 from time import sleep
 from git import clone_repo, save_access_token, get_access_token, get_user_data, remove_access_token, get_user_code
@@ -8,6 +9,16 @@ app = typer.Typer()
 
 challenges = {"python": {"example-python": "https://github.com/Recticode/example-python"}}
 challenge_names = {"example-python": challenges['python']['example-python']}
+
+def require_login(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        access_token = get_access_token()
+        if not access_token:
+            print("[red]You must login first[/red]")
+            raise typer.Exit()
+        return func(*args, **kwargs)
+    return wrapper
 
 @app.command()
 def login():
@@ -21,7 +32,7 @@ def login():
 
         print(f"Go to {verification_uri} and enter code [bold]{user_code}[/bold]")
 
-        for i in range(int(expires_in / interval)):
+        for i in range(expires_in // interval):
             poll_values = {
                 "client_id": "Ov23lizX5wFSpnR89gKJ",
                 "device_code": device_code,
@@ -47,14 +58,11 @@ def login():
         print("You are already logged in")
 
 @app.command()
+@require_login
 def whoami():
     access_token = get_access_token()
-    if not access_token:
-        print("You are not logged in")
-    else:
-        username, email, name = get_user_data(access_token=access_token)
-
-        print("Hi", name)
+    username, email, name = get_user_data(access_token=access_token)
+    print("Hi", name)
 
 @app.command()
 def logout():
@@ -68,17 +76,13 @@ def logout():
 
 
 @app.command()
+@require_login
 def start(challenge_name):
-    access_token = get_access_token()
-    if not access_token:
-        print("Login first to start the challenges")
+    if challenge_name in challenge_names:
+        clone_repo(challenge_names[challenge_name])
+        print(f"Go to /{challenge_name} to start the challenge")
     else:
-        username, email, name = get_user_data(access_token=access_token)
-        if challenge_name in challenge_names:
-            clone_repo(challenge_names[challenge_name])
-            print(f"Go to /{challenge_name} to start the challenge")
-        else:
-            print("Not a challenge name")
+        print("Not a challenge name")
 
 @app.command()
 def list_challenges():
