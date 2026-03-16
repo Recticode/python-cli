@@ -1,14 +1,11 @@
 import typer
 from rich import print
 from functools import wraps
-import requests
 from time import sleep
 from git import clone_repo, save_access_token, get_access_token, get_user_data, remove_access_token, get_user_code
+import requests
 
 app = typer.Typer()
-
-challenges = {"python": {"example-python": "https://github.com/Recticode/example-python"}}
-challenge_names = {"example-python": challenges['python']['example-python']}
 
 def require_login(func):
     @wraps(func)
@@ -87,19 +84,30 @@ def logout():
 @app.command()
 @require_login
 def start(challenge_name):
-    if challenge_name in challenge_names:
-        clone_repo(challenge_names[challenge_name])
-        print(f"[green]Challenge cloned![/green] cd {challenge_name} to start")
+    request_url = "http://127.0.0.1:8000/challenge_repo/"
+    response = requests.get(request_url + challenge_name)
+    if "200" in str(response):
+        if "error" in response.json():
+            print(response.json()['error'])
+        else:
+            clone_repo(response.json()['repo_name'])
+            print(f"[green]Challenge cloned![/green] cd {challenge_name} to start")
     else:
-        print("Not a challenge name")
+        print("Error occurred")
 
 @app.command()
+@require_login
 def list_challenges():
-    print("[bold][yellow]All Challenges[/yellow][/bold]")
-    for language in challenges:
-        print(f"[bold][green]{language.title()}[/green][/bold]")
-        for challenge in challenges[language]:
-            print(f"  • {challenge}")
+    request_url = "http://127.0.0.1:8000/list_challenges"
+    response = requests.get(request_url)
+    if "200" in str(response):
+        challenges = response.json()['challenges']
+
+        print("[bold][yellow]All Challenges[/yellow][/bold]")
+        for challenge in challenges:
+            print(f"[bold]{challenge['name']}[/bold]: {challenge['description']} ({challenge['language']})")
+    else:
+        print("Error occurred")
 
 if __name__ == "__main__":
     app()
