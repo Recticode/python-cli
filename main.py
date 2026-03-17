@@ -84,9 +84,12 @@ def logout():
 @app.command()
 @require_login
 def start(challenge_name):
-    request_url = "http://127.0.0.1:8000/challenge_repo/"
-    response = requests.get(request_url + challenge_name)
-    if "200" in str(response):
+    access_token = get_access_token()
+
+    request_url = "https://api.recticode.com/challenge_repo/"
+
+    response = requests.get(request_url + challenge_name + "?token=" + access_token)
+    if response.status_code == 200:
         if "error" in response.json():
             print(response.json()['error'])
         else:
@@ -98,9 +101,12 @@ def start(challenge_name):
 @app.command()
 @require_login
 def list_challenges():
-    request_url = "http://127.0.0.1:8000/list_challenges"
+    access_token = get_access_token()
+
+    request_url = "https://api.recticode.com/list_challenges?token=" + access_token
+
     response = requests.get(request_url)
-    if "200" in str(response):
+    if response.status_code == 200:
         challenges = response.json()['challenges']
 
         print("[bold][yellow]All Challenges[/yellow][/bold]")
