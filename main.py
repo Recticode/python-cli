@@ -4,6 +4,9 @@ from functools import wraps
 from time import sleep
 from git import clone_repo, save_access_token, get_access_token, get_user_data, remove_access_token, get_user_code
 import requests
+import os.path
+import subprocess
+import sys
 
 app = typer.Typer()
 
@@ -114,6 +117,20 @@ def list_challenges():
             print(f"[bold]{challenge['name']}[/bold]: {challenge['description']} ({challenge['language']})")
     else:
         print("Error occurred")
+
+@app.command()
+@require_login
+def check():
+    if os.path.exists("challenge.json"):
+        env = os.environ.copy()
+        env["PYTHONPATH"] = "."
+        subprocess.run(
+            [sys.executable, "-m", "pytest", "tests/"],
+            env=env
+        )
+    else:
+        print("This is not a valid challenge")
+
 
 if __name__ == "__main__":
     app()
