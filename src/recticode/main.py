@@ -2,7 +2,7 @@ import typer
 from rich import print
 from functools import wraps
 from time import sleep
-from git import clone_repo, save_access_token, get_access_token, get_user_data, remove_access_token, get_user_code
+from recticode.git_code import clone_repo, save_access_token, get_access_token, get_user_data, remove_access_token, get_user_code
 import requests
 import os.path
 import subprocess
