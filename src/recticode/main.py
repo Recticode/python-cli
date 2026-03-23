@@ -7,6 +7,8 @@ import requests
 import os.path
 import subprocess
 import sys
+import shutil
+import json
 
 app = typer.Typer()
 
@@ -131,6 +133,44 @@ def check():
     else:
         print("This is not a valid challenge")
 
+@app.command()
+@require_login
+def submit():
+    if os.path.exists("challenge.json"):
+        access_token = get_access_token()
+
+        # creates a zip file which contains all the files in the src folder
+        shutil.make_archive("zip_file", 'zip', "src")
+
+        # gets the challenge name from challenge.json
+        with open("challenge.json") as f:
+            challenge_name = json.load(f)["name"]
+
+        request_url = f"https://api.recticode.com/submit/{challenge_name}?token=" + access_token
+
+        # sends the request with the zip file
+        with open("zip_file.zip", "rb") as f:
+            response = requests.post(
+                request_url,
+                files={'file': ("zip_file.zip", f, "application/zip")}
+            )
+
+        if response.status_code == 200:
+            r_json = response.json()
+            print(f"[yellow]Tests passed: {r_json['correct']}/{r_json['total']}[/yellow]")
+            if r_json['correct'] == r_json['total']:
+                print("[green]You passed all the tests! Challenge complete![/green]")
+            else:
+                print("[red]You did not pass all the tests[/red]")
+        else:
+            print("Error occurred")
+
+        os.remove("zip_file.zip")
+
+
+        # then will need to send this zip file across to api
+    else:
+        print("This is not a valid challenge")
 
 if __name__ == "__main__":
     app()
