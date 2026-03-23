@@ -135,6 +135,24 @@ def check():
 
 @app.command()
 @require_login
+def passed_challenges():
+    access_token = get_access_token()
+
+    request_url = "https://api.recticode.com/passed_challenges?token=" + access_token
+
+    response = requests.get(request_url)
+    if response.status_code == 200:
+        challenges = response.json()['challenges']
+
+        print("[bold][green]Passed Challenges[/green][/bold]")
+        for challenge in challenges:
+            print(f"[bold]{challenge['challenge_name']}[/bold]")
+    else:
+        print("Error occurred")
+
+
+@app.command()
+@require_login
 def submit():
     if os.path.exists("challenge.json"):
         access_token = get_access_token()
