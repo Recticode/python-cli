@@ -155,20 +155,22 @@ def submit():
                 files={'file': ("zip_file.zip", f, "application/zip")}
             )
 
+        # checks response and shows relevant text
         if response.status_code == 200:
             r_json = response.json()
             print(f"[yellow]Tests passed: {r_json['correct']}/{r_json['total']}[/yellow]")
-            if r_json['correct'] == r_json['total']:
+            if r_json['passed']:
                 print("[green]You passed all the tests! Challenge complete![/green]")
             else:
                 print("[red]You did not pass all the tests[/red]")
         else:
-            print("Error occurred")
+            print(f"[red]request failed ({response.status_code})[/red]")
+            try:
+                print(response.json()['detail'])
+            except Exception:
+                print(response.text)
 
         os.remove("zip_file.zip")
-
-
-        # then will need to send this zip file across to api
     else:
         print("This is not a valid challenge")
 
