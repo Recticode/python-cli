@@ -120,18 +120,18 @@ def list_challenges():
     else:
         print("Error occurred")
 
-@app.command()
-@require_login
-def check():
-    if os.path.exists("challenge.json"):
-        env = os.environ.copy()
-        env["PYTHONPATH"] = "."
-        subprocess.run(
-            [sys.executable, "-m", "pytest", "tests/"],
-            env=env
-        )
-    else:
-        print("This is not a valid challenge")
+# @app.command()
+# @require_login
+# def check():
+#     if os.path.exists("challenge.json"):
+#         env = os.environ.copy()
+#         env["PYTHONPATH"] = "."
+#         subprocess.run(
+#             [sys.executable, "-m", "pytest", "tests/"],
+#             env=env
+#         )
+#     else:
+#         print("This is not a valid challenge")
 
 @app.command()
 @require_login
