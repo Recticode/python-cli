@@ -1,4 +1,14 @@
-# `recticode`
+# Recticode
+
+This is the Python CLI for the tool Recticode.
+
+Recticode is a cli-based platform where you:
+- pull a coding challenge (a real mini codebase)
+- identify and fix a bug or implement a feature
+- run your own tests to verify your solution
+- submit your fix
+
+
 
 **Usage**:
 
@@ -19,7 +29,8 @@ $ recticode [OPTIONS] COMMAND [ARGS]...
 * `logout`
 * `start`
 * `list-challenges`
-* `check`
+* `passed-challenges`
+* `submit`
 
 ## `recticode login`
 
@@ -85,12 +96,24 @@ $ recticode list-challenges [OPTIONS]
 
 * `--help`: Show this message and exit.
 
-## `recticode check`
+## `recticode passed-challenges`
 
 **Usage**:
 
 ```console
-$ recticode check [OPTIONS]
+$ recticode passed-challenges [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `recticode submit`
+
+**Usage**:
+
+```console
+$ recticode submit [OPTIONS]
 ```
 
 **Options**:
