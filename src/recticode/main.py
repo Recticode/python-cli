@@ -50,6 +50,11 @@ def login():
                 username, email, name = get_user_data(access_token=access_token)
 
                 save_access_token(access_token=access_token)
+
+                # adds the user to the database if not already in it
+                request_url = "https://api.recticode.com/login?token=" + access_token
+                requests.get(request_url)
+
                 print(f"[green]✓ Logged in as {name}[/green]")
                 break
 
