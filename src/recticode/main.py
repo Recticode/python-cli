@@ -24,54 +24,109 @@ def require_login(func):
 
 @app.command()
 def login():
-    access_token = get_access_token()
-    if not access_token:
-        headers = {
-            "Accept": "application/json"
+    existing_token = get_access_token()
+    if existing_token:
+        try:
+            username, email, name = get_user_data(access_token=existing_token)
+            if username:
+                print(f"[green]You are already logged in as {name}[/green]")
+                return
+            else:
+                print("[yellow]Stored token invalid. Re-authenticating...[/yellow]")
+                remove_access_token()
+        except Exception:
+            print("[yellow]Stored token invalid. Re-authenticating...[/yellow]")
+            remove_access_token()
+
+    headers = {"Accept": "application/json"}
+
+    try:
+        device_code, verification_uri, expires_in, user_code, interval = get_user_code()
+    except Exception as e:
+        print(f"[red]Failed to start login process: {e}[/red]")
+        raise typer.Exit()
+
+    print(f"\nGo to [bold]{verification_uri}[/bold]")
+    print(f"And enter code: [bold]{user_code}[/bold]\n")
+
+    elapsed = 0
+
+    while elapsed < expires_in:
+        sleep(interval)
+        elapsed += interval
+
+        poll_values = {
+            "client_id": "Ov23lizX5wFSpnR89gKJ",
+            "device_code": device_code,
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code"
         }
 
-        device_code, verification_uri, expires_in, user_code, interval = get_user_code()
+        try:
+            poll_post = requests.post(
+                "https://github.com/login/oauth/access_token",
+                data=poll_values,
+                headers=headers,
+                timeout=10
+            )
+        except requests.RequestException:
+            print("[red]Network error while polling GitHub[/red]")
+            raise typer.Exit()
 
-        print(f"Go to {verification_uri} and enter code [bold]{user_code}[/bold]")
+        if poll_post.status_code != 200:
+            print(f"[red]GitHub returned status {poll_post.status_code}[/red]")
+            raise typer.Exit()
 
-        for i in range(expires_in // interval):
-            poll_values = {
-                "client_id": "Ov23lizX5wFSpnR89gKJ",
-                "device_code": device_code,
-                "grant_type": "urn:ietf:params:oauth:grant-type:device_code"
-            }
-            poll_post = requests.post("https://github.com/login/oauth/access_token", data=poll_values, headers=headers)
+        poll_json = poll_post.json()
 
-            poll_json = poll_post.json()
+        # success case
+        if "access_token" in poll_json:
+            access_token = poll_json["access_token"]
 
-            if "access_token" in poll_json:
-                access_token = poll_json['access_token']
-
+            try:
                 username, email, name = get_user_data(access_token=access_token)
+            except Exception:
+                print("[red]Failed to fetch user data from GitHub[/red]")
+                raise typer.Exit()
 
-                save_access_token(access_token=access_token)
+            if not username:
+                print("[red]Login failed: could not retrieve user info[/red]")
+                raise typer.Exit()
 
-                # adds the user to the database if not already in it
-                request_url = "https://api.recticode.com/login?token=" + access_token
-                requests.get(request_url)
+            save_access_token(access_token)
 
-                print(f"[green]✓ Logged in as {name}[/green]")
-                break
+            try:
+                requests.get(
+                    "https://api.recticode.com/login",
+                    params={"token": access_token},
+                    timeout=10
+                )
+            except requests.RequestException:
+                print("[yellow]Warning: could not notify recticode backend[/yellow]")
 
-            if "error" in poll_json:
-                if poll_json["error"] == "authorization_pending":
-                    sleep(interval)
-                    continue
-                elif poll_json["error"] == "slow_down":
-                    interval += 5
-                    sleep(interval)
-                elif poll_json["error"] == "expired_token":
-                    print("[red]Device code expired, try login again[/red]")
-                    break
-    else:
-        username, email, name = get_user_data(access_token=access_token)
+            print(f"[green]✓ Logged in as {name}[/green]")
+            return
 
-        print("You are already logged in")
+        # error cases
+        if "error" in poll_json:
+            error = poll_json["error"]
+
+            if error == "authorization_pending":
+                continue
+
+            elif error == "slow_down":
+                interval += 5
+                continue
+
+            elif error == "expired_token":
+                print("[red]Device code expired. Please run login again.[/red]")
+                raise typer.Exit()
+
+            else:
+                print(f"[red]Login failed: {error}[/red]")
+                raise typer.Exit()
+
+    print("[red]Login timed out. Please try again.[/red]")
+    raise typer.Exit()
 
 @app.command()
 @require_login
