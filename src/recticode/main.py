@@ -19,6 +19,18 @@ def require_login(func):
         if not access_token:
             print("[red]You must login first[/red]")
             raise typer.Exit()
+
+        try:
+            username, _, _ = get_user_data(access_token=access_token)
+            if not username:
+                print("[red]Session expired. Please login again.[/red]")
+                remove_access_token()
+                raise typer.Exit()
+        except Exception:
+            print("[red]Session invalid. Please login again.[/red]")
+            remove_access_token()
+            raise typer.Exit()
+
         return func(*args, **kwargs)
     return wrapper
 
