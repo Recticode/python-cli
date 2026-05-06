@@ -188,15 +188,8 @@ def list_challenges():
 
         print("[bold][yellow]All Challenges[/yellow][/bold]")
         for challenge in challenges:
-            difficulty = challenge['difficulty']
-            difficulty_text = ""
-            if difficulty == "easy":
-                difficulty_text = f"[green][{difficulty.title()}][/green]"
-            elif difficulty == "medium":
-                difficulty_text = f"[dark_orange][{difficulty.title()}][/dark_orange]"
-            else:
-                difficulty_text = f"[red][{difficulty.title()}][/red]"
-            print(f"[bold]{challenge['name']}[/bold]: {challenge['description']} {difficulty_text} ({challenge['language']})")
+            difficulty = str(challenge['difficulty'])
+            print(f"[bold]{challenge['name']}[/bold]: {challenge['description']} [red]{challenge['difficulty']}[/red] ({challenge['language']})")
     else:
         print("Error occurred")
 
